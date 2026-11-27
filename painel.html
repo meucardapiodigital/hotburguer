@@ -387,7 +387,7 @@ $("#bEsq").onclick=async()=>{ const em=$("#lEmail").value.trim().toLowerCase(); 
   if(DB.modo!=="online"){ $("#lerr").textContent="Sem conexão com o servidor."; return; }
   try{ await firebase.auth().sendPasswordResetEmail(em); $("#lerr").textContent=""; alert("Enviamos um link para "+em+" criar uma nova senha. Veja também a caixa de spam."); }
   catch(e){ $("#lerr").textContent=erroLogin(e); } };
-$("#bEntrar").onclick=entrar; $("#lSenha").onkeydown=e=>{ if(e.key==="Enter") entrar(); };
+$("#bEntrar").onclick=entrar; try{ const m=sessionStorage.getItem("painel_msg"); if(m){ $("#lerr").textContent=m; sessionStorage.removeItem("painel_msg"); } }catch(e){} $("#lSenha").onkeydown=e=>{ if(e.key==="Enter") entrar(); };
 let INI=false;
 function iniciar(){ if(INI) return; INI=true; $("#login").style.display="none"; $("#app").style.display="block";
   $("#modoP").textContent=DB.modo==="demo"?"Modo demonstração":"Online";
@@ -397,7 +397,7 @@ function iniciar(){ if(INI) return; INI=true; $("#login").style.display="none"; 
   OFF&&OFF(); OFF=DB.ouvirHoje(lista=>{ const antes=new Set(PED.map(p=>p.id)); PED=lista.sort((a,b)=>a.criado-b.criado);
     if(PRIMEIRA){ PRIMEIRA=false; lista.forEach(p=>IMPRESSOS.add(p.id)); } else if(AUTO){ lista.filter(p=>p.status==="recebido"&&!IMPRESSOS.has(p.id)).forEach(filaImprime); }
     PED.filter(p=>!antes.has(p.id)&&p.status==="recebido"&&antes.size).forEach(p=>{ if(document.hidden&&"Notification" in window&&Notification.permission==="granted") try{ new Notification(`Novo pedido #${p.num}`,{body:`${p.cliente.nome} · ${R(p.total)}`,icon:"icone.png"}); }catch(e){} });
-    desenha(); alarmeChk(); }, ()=>{ alert("Sem permissão para ver os pedidos desta loja. Confira se este e-mail é administrador da loja no Firebase."); }); }
+    desenha(); alarmeChk(); }, async ()=>{ const em=(window.firebase&&firebase.auth().currentUser||{}).email||""; try{ sessionStorage.setItem("painel_msg","O e-mail "+em+" não tem acesso a esta loja. Entre com o e-mail e a senha desta loja."); }catch(e){} await DB.sair(); location.reload(); }); }
 DB.logado(ok=>{ if(ok) iniciar(); });
 $("#bSair").onclick=async()=>{ if(!confirm("Sair do painel?")) return; await DB.sair(); location.reload(); };
 $("#bSom").onclick=()=>{ SOM=!SOM; ac(); desenhaSom(); if(SOM) toque(); alarmeChk(); };
